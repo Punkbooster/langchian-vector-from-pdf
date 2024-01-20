@@ -9,6 +9,9 @@ from langchain.embeddings import OpenAIEmbeddings
 # might be a better option than pinecone as its free
 from langchain_community.vectorstores import FAISS
 
+from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
+
 if __name__ == "__main__":
   pdf_path = "/Users/punkbooster/Projects/langchain/vector-store-in-memory/llm_resoning.pdf"
 
@@ -32,4 +35,16 @@ if __name__ == "__main__":
   vectorstore = FAISS.from_documents(docs, embedings)
 
   # persist database in file system locally
-  vectorstore.save_local("faith_index")
+  vectorstore.save_local("faiss_index")
+
+  # load faiss_index database from local storage
+  new_verctorstore = FAISS.load_local("faiss_index", embedings)
+
+  # RetrievalQA is a vector db qa chain. 
+  # Accept prompt. 
+  # Find similar vectors for the prompt. This vector context will be passed to llm along with the prompt.  
+  qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=new_verctorstore.as_retriever())
+
+  res = qa.run("Give me the gist of ReAct in 3 sentences")
+
+  print(res)
